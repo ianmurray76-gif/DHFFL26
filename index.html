@@ -441,25 +441,6 @@
   <footer>DHFFL &middot; 2026 Season</footer>
 </div>
 
-<div class="results-page" id="results-page">
-  <header>
-    <h1>DHFFL</h1>
-    <p>Commissioner Results</p>
-  </header>
-  <div class="container">
-    <div class="summary-bar">
-      <h2 id="resp-count">0 responses</h2>
-      <div style="display:flex; gap:0.5rem;">
-        <button class="clear-btn" id="back-to-form-btn" style="border-color:var(--line); color:var(--muted);">Back to form</button>
-        <button class="clear-btn" id="clear-results-btn">Clear all data</button>
-      </div>
-    </div>
-
-    <div id="tally-section"></div>
-    <div id="responses-section"></div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="password-modal">
   <div class="modal-box">
     <h3>Commissioner login</h3>
@@ -475,6 +456,9 @@
 
 <script>
 const RESULTS_PASSWORD = "DHFFL2026";
+
+// Paste your Google Apps Script Web App URL between the quotes below.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyeyPRIOWAUmhV0T7pynlOhSr2zhLiVIMUxbYuyRU4vKb9J1rxtm9LMun-fsZQwsy-T/exec";
 
 const rules = [
   { id: "platform", text: "Switch to a different platform other than Yahoo?" },
@@ -554,30 +538,42 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
     return;
   }
 
-  const submission = {
+  if (!SCRIPT_URL || SCRIPT_URL.indexOf('PASTE_YOUR') === 0) {
+    showError('Form is not yet connected to the results sheet. Contact the commissioner.');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  const payload = {
     name,
-    draftSlots,
-    ruleVotes,
+    draftSlots: draftSlots.join(', '),
     submittedAt: new Date().toISOString()
   };
-
-  const key = 'response:' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  rules.forEach(r => {
+    payload[r.id] = ruleVotes[r.id] || '';
+  });
 
   try {
-    const result = await window.storage.set(key, JSON.stringify(submission), true);
-    if (!result) {
-      showError('Something went wrong submitting your vote. Please try again.');
-      return;
-    }
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
     document.getElementById('form-wrap').classList.add('hidden');
     document.getElementById('success-screen').style.display = 'block';
   } catch (err) {
-    showError('Something went wrong submitting your vote. Please try again.');
+    showError('Something went wrong submitting your vote. Please check your connection and try again.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit my vote';
   }
 });
 
-const ruleLabels = {};
-rules.forEach(r => { ruleLabels[r.id] = r.text.replace(/<[^>]*>/g, ''); });
+// Paste your Google Sheet's shareable URL between the quotes below.
+const SHEET_VIEW_URL = "https://docs.google.com/spreadsheets/d/1PjZM8JJFeeAMEktl7fOB3sHZmAn3JhOTTDC_GbV8YnM/edit?usp=sharing";
 
 document.getElementById('open-results-link').addEventListener('click', () => {
   document.getElementById('password-input').value = '';
@@ -598,136 +594,10 @@ function checkPassword(){
   const val = document.getElementById('password-input').value;
   if (val === RESULTS_PASSWORD) {
     document.getElementById('password-modal').classList.remove('show');
-    document.getElementById('form-page').style.display = 'none';
-    document.getElementById('results-page').classList.add('show');
-    loadResults();
+    window.open(SHEET_VIEW_URL, '_blank');
   } else {
     document.getElementById('password-error').style.display = 'block';
   }
-}
-
-document.getElementById('back-to-form-btn').addEventListener('click', () => {
-  document.getElementById('results-page').classList.remove('show');
-  document.getElementById('form-page').style.display = 'block';
-});
-
-document.getElementById('clear-results-btn').addEventListener('click', async () => {
-  if (!confirm('This will permanently delete all submitted responses. Continue?')) return;
-  try {
-    const list = await window.storage.list('response:', true);
-    if (list && list.keys) {
-      for (const k of list.keys) {
-        await window.storage.delete(k, true);
-      }
-    }
-    loadResults();
-  } catch (err) {
-    alert('Could not clear results. Please try again.');
-  }
-});
-
-async function loadResults(){
-  const tallySection = document.getElementById('tally-section');
-  const responsesSection = document.getElementById('responses-section');
-  const respCount = document.getElementById('resp-count');
-
-  tallySection.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
-  responsesSection.innerHTML = '';
-
-  let keys = [];
-  try {
-    const list = await window.storage.list('response:', true);
-    keys = (list && list.keys) ? list.keys : [];
-  } catch (err) {
-    tallySection.innerHTML = '<p style="text-align:center; color:var(--muted);">No responses yet.</p>';
-    respCount.textContent = '0 responses';
-    return;
-  }
-
-  if (keys.length === 0) {
-    tallySection.innerHTML = '';
-    responsesSection.innerHTML = '<div class="empty-state">No one has voted yet. Share the form link with the league.</div>';
-    respCount.textContent = '0 responses';
-    return;
-  }
-
-  const submissions = [];
-  for (const k of keys) {
-    try {
-      const res = await window.storage.get(k, true);
-      if (res && res.value) {
-        submissions.push(JSON.parse(res.value));
-      }
-    } catch (err) {}
-  }
-
-  submissions.sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
-
-  respCount.textContent = submissions.length + (submissions.length === 1 ? ' response' : ' responses');
-
-  const draftTally = {};
-  const ruleTally = {};
-  rules.forEach(r => { ruleTally[r.id] = { yes: 0, no: 0 }; });
-
-  submissions.forEach(s => {
-    (s.draftSlots || []).forEach(slot => {
-      draftTally[slot] = (draftTally[slot] || 0) + 1;
-    });
-    Object.entries(s.ruleVotes || {}).forEach(([id, val]) => {
-      if (ruleTally[id] && (val === 'yes' || val === 'no')) {
-        ruleTally[id][val]++;
-      }
-    });
-  });
-
-  const sortedDraftSlots = Object.entries(draftTally).sort((a,b) => b[1]-a[1]);
-
-  let tallyHtml = '<div class="tally-card"><h3 style="margin-top:0;">Draft availability tally</h3>';
-  if (sortedDraftSlots.length === 0) {
-    tallyHtml += '<p style="color:var(--muted); font-size:0.9rem;">No draft slots selected yet.</p>';
-  } else {
-    sortedDraftSlots.forEach(([slot, count]) => {
-      tallyHtml += `<div class="tally-row"><span class="label">${slot}</span><span class="counts">${count} available</span></div>`;
-    });
-  }
-  tallyHtml += '</div>';
-
-  tallyHtml += '<div class="tally-card"><h3 style="margin-top:0;">Rule change tally</h3>';
-  rules.forEach(r => {
-    const t = ruleTally[r.id];
-    tallyHtml += `<div class="tally-row"><span class="label">${ruleLabels[r.id]}</span><span class="counts"><span class="y">${t.yes} yes</span> &middot; <span class="n">${t.no} no</span></span></div>`;
-  });
-  tallyHtml += '</div>';
-
-  tallySection.innerHTML = tallyHtml;
-
-  let respHtml = '<h3>Individual responses</h3>';
-  submissions.forEach(s => {
-    const dateStr = new Date(s.submittedAt).toLocaleString();
-    respHtml += `<div class="resp-card">
-      <h3>${escapeHtml(s.name)}</h3>
-      <p style="color:var(--muted); font-size:0.78rem; margin:0 0 0.7rem;">Submitted ${dateStr}</p>
-      <p style="font-size:0.8rem; font-weight:700; margin:0 0 0.4rem; color:var(--pigskin-dark);">Available drafts</p>
-      <div class="tag-row">
-        ${(s.draftSlots || []).map(d => `<span class="tag">${d}</span>`).join('') || '<span style="color:var(--muted); font-size:0.85rem;">None selected</span>'}
-      </div>
-      <p style="font-size:0.8rem; font-weight:700; margin:0.8rem 0 0.4rem; color:var(--pigskin-dark);">Rule votes</p>
-      <table>
-        ${rules.map(r => {
-          const val = (s.ruleVotes || {})[r.id];
-          const cls = val === 'yes' ? 'yes-val' : 'no-val';
-          return `<tr><td>${ruleLabels[r.id]}</td><td class="${cls}">${val ? val.toUpperCase() : '—'}</td></tr>`;
-        }).join('')}
-      </table>
-    </div>`;
-  });
-  responsesSection.innerHTML = respHtml;
-}
-
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }
 </script>
 
