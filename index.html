@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHFFL 2026 Season Vote</title>
+<style>
+  :root{
+    --field-green:#1f4d2c;
+    --field-green-dark:#163a20;
+    --chalk:#f4f1e8;
+    --pigskin:#7a4a2b;
+    --pigskin-dark:#5c3620;
+    --gold:#d4a93a;
+    --ink:#1c1c1a;
+    --muted:#6b6b63;
+    --line:#d8d4c4;
+    --danger:#a3372e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    background:var(--chalk);
+    color:var(--ink);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 78px, rgba(0,0,0,0.025) 78px, rgba(0,0,0,0.025) 80px);
+  }
+  header{
+    background:var(--field-green);
+    background-image: repeating-linear-gradient(90deg, var(--field-green) 0px, var(--field-green) 38px, var(--field-green-dark) 38px, var(--field-green-dark) 40px);
+    color:var(--chalk);
+    padding:2.2rem 1.5rem 2.6rem;
+    text-align:center;
+    position:relative;
+    border-bottom:6px solid var(--gold);
+  }
+  header h1{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight:900;
+    font-size:3rem;
+    letter-spacing:0.12em;
+    margin:0;
+    text-shadow:3px 3px 0 var(--field-green-dark);
+  }
+  header p{
+    margin:0.5rem 0 0;
+    font-size:0.95rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+  .container{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 1.25rem 4rem;
+  }
+  .intro{
+    text-align:center;
+    margin:2rem auto 0;
+    max-width:560px;
+    color:var(--muted);
+    font-size:0.95rem;
+    line-height:1.5;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1.75rem;
+    margin-top:1.75rem;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card-label{
+    display:inline-block;
+    background:var(--pigskin);
+    color:#fff;
+    font-size:0.7rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-bottom:0.75rem;
+    font-weight:700;
+  }
+  .card h2{
+    margin:0 0 0.35rem;
+    font-size:1.25rem;
+  }
+  .card .sub{
+    color:var(--muted);
+    font-size:0.88rem;
+    margin:0 0 1.1rem;
+    line-height:1.5;
+  }
+  label.field-label{
+    display:block;
+    font-weight:700;
+    font-size:0.85rem;
+    margin-bottom:0.4rem;
+  }
+  input[type="text"]{
+    width:100%;
+    padding:0.65rem 0.8rem;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:1rem;
+    font-family:inherit;
+  }
+  input[type="text"]:focus{
+    outline:none;
+    border-color:var(--field-green);
+    box-shadow:0 0 0 3px rgba(31,77,44,0.12);
+  }
+  .week-group{
+    margin-bottom:1.25rem;
+  }
+  .week-group:last-child{margin-bottom:0;}
+  .week-group h3{
+    font-size:0.8rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--pigskin-dark);
+    margin:0 0 0.6rem;
+    border-bottom:2px solid var(--line);
+    padding-bottom:0.4rem;
+  }
+  .slot-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:0.5rem;
+  }
+  .slot{
+    display:flex;
+    align-items:center;
+    gap:0.55rem;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:0.6rem 0.7rem;
+    cursor:pointer;
+    transition:background 0.12s, border-color 0.12s;
+    font-size:0.88rem;
+  }
+  .slot:hover{background:#faf9f4;}
+  .slot.checked{
+    background:#eaf3ec;
+    border-color:var(--field-green);
+  }
+  .slot input{
+    width:17px;
+    height:17px;
+    accent-color:var(--field-green);
+    flex-shrink:0;
+  }
+  .rule-item{
+    border-top:1px solid var(--line);
+    padding:1.1rem 0;
+  }
+  .rule-item:first-child{
+    border-top:none;
+    padding-top:0;
+  }
+  .rule-item p.rule-text{
+    margin:0 0 0.7rem;
+    font-size:0.95rem;
+    line-height:1.45;
+  }
+  .yn-toggle{
+    display:flex;
+    gap:0.6rem;
+  }
+  .yn-btn{
+    flex:1;
+    text-align:center;
+    padding:0.55rem 0;
+    border:1px solid var(--line);
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:0.88rem;
+    color:var(--muted);
+    transition:all 0.12s;
+    user-select:none;
+  }
+  .yn-btn.yes.active{
+    background:var(--field-green);
+    border-color:var(--field-green);
+    color:#fff;
+  }
+  .yn-btn.no.active{
+    background:var(--danger);
+    border-color:var(--danger);
+    color:#fff;
+  }
+  .submit-row{
+    margin-top:2rem;
+    text-align:center;
+  }
+  button.submit-btn{
+    background:var(--pigskin);
+    color:#fff;
+    border:none;
+    padding:0.9rem 2.4rem;
+    border-radius:8px;
+    font-size:1.05rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    transition:background 0.15s, transform 0.1s;
+  }
+  button.submit-btn:hover{background:var(--pigskin-dark);}
+  button.submit-btn:active{transform:scale(0.98);}
+  .error-msg{
+    color:var(--danger);
+    font-size:0.85rem;
+    text-align:center;
+    margin-top:0.8rem;
+    display:none;
+  }
+  .success-screen{
+    text-align:center;
+    padding:3rem 1.5rem;
+    display:none;
+  }
+  .success-screen .ball{
+    font-size:3rem;
+    margin-bottom:0.5rem;
+  }
+  .success-screen h2{
+    font-size:1.6rem;
+    margin:0 0 0.5rem;
+  }
+  .success-screen p{
+    color:var(--muted);
+    margin:0;
+  }
+  footer{
+    text-align:center;
+    padding:1.5rem;
+    color:var(--muted);
+    font-size:0.78rem;
+  }
+  footer a{
+    color:var(--muted);
+  }
+  #form-wrap.hidden{display:none;}
+
+  .results-link{
+    display:block;
+    text-align:center;
+    margin-top:0.5rem;
+    font-size:0.78rem;
+    color:var(--muted);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    width:100%;
+    padding:0.5rem;
+  }
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:1rem;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#fff;
+    border-radius:10px;
+    padding:2rem;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+  }
+  .modal-box h3{margin-top:0;}
+  .modal-box input{margin:1rem 0;}
+  .modal-actions{display:flex;gap:0.5rem;}
+  .modal-actions button{flex:1;padding:0.6rem;border-radius:6px;border:1px solid var(--line);cursor:pointer;font-weight:700;}
+  .modal-actions button.confirm{background:var(--field-green);color:#fff;border-color:var(--field-green);}
+
+  .results-page{display:none;}
+  .results-page.show{display:block;}
+  .results-page .container{padding-top:2rem;}
+  .resp-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1.25rem 1.5rem;
+    margin-bottom:1rem;
+  }
+  .resp-card h3{margin:0 0 0.6rem;font-size:1.05rem;}
+  .resp-card .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.6rem;}
+  .tag{
+    background:#eaf3ec;
+    color:var(--field-green-dark);
+    font-size:0.78rem;
+    padding:3px 9px;
+    border-radius:14px;
+  }
+  .resp-card table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+  .resp-card td{padding:4px 0;border-top:1px solid var(--line);}
+  .resp-card td:last-child{text-align:right;font-weight:700;}
+  .resp-card td.yes-val{color:var(--field-green-dark);}
+  .resp-card td.no-val{color:var(--danger);}
+  .summary-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:1.5rem;
+  }
+  .summary-bar h2{margin:0;}
+  .clear-btn{
+    background:none;
+    border:1px solid var(--danger);
+    color:var(--danger);
+    padding:0.4rem 0.9rem;
+    border-radius:6px;
+    font-size:0.8rem;
+    cursor:pointer;
+  }
+  .tally-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1.5rem;
+    margin-bottom:1.5rem;
+  }
+  .tally-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0.6rem 0;
+    border-top:1px solid var(--line);
+    font-size:0.9rem;
+  }
+  .tally-row:first-child{border-top:none;}
+  .tally-row .label{flex:1;padding-right:1rem;}
+  .tally-row .counts{font-weight:700;white-space:nowrap;}
+  .tally-row .counts .y{color:var(--field-green-dark);}
+  .tally-row .counts .n{color:var(--danger);}
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:3rem 1rem;
+  }
+</style>
+</head>
+<body>
+
+<div id="form-page">
+  <header>
+    <h1>DHFFL</h1>
+    <p>2026 Season &mdash; Draft &amp; Rules Vote</p>
+  </header>
+
+  <div class="container">
+    <p class="intro">Fill this out before the season kicks off. Pick every draft slot that works for you and cast your vote on each proposed rule change.</p>
+
+    <div id="form-wrap">
+      <div class="card">
+        <span class="card-label">Step 1</span>
+        <h2>Who's voting?</h2>
+        <p class="sub">Enter your name so we know whose picks these are.</p>
+        <label class="field-label" for="voter-name">Your name</label>
+        <input type="text" id="voter-name" placeholder="Full name">
+      </div>
+
+      <div class="card">
+        <span class="card-label">Step 2</span>
+        <h2>Draft availability</h2>
+        <p class="sub">Select every date and time slot you're available to draft. The more you select, the easier this is to schedule.</p>
+
+        <div class="week-group">
+          <h3>Week of Aug 21</h3>
+          <div class="slot-grid">
+            <label class="slot"><input type="checkbox" data-draft="Fri 8/21 Day"><span>Fri 8/21 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Fri 8/21 Night"><span>Fri 8/21 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 8/22 Day"><span>Sat 8/22 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 8/22 Night"><span>Sat 8/22 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 8/23 Day"><span>Sun 8/23 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 8/23 Night"><span>Sun 8/23 &mdash; Night</span></label>
+          </div>
+        </div>
+
+        <div class="week-group">
+          <h3>Week of Aug 28</h3>
+          <div class="slot-grid">
+            <label class="slot"><input type="checkbox" data-draft="Fri 8/28 Day"><span>Fri 8/28 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Fri 8/28 Night"><span>Fri 8/28 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 8/29 Day"><span>Sat 8/29 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 8/29 Night"><span>Sat 8/29 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 8/30 Day"><span>Sun 8/30 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 8/30 Night"><span>Sun 8/30 &mdash; Night</span></label>
+          </div>
+        </div>
+
+        <div class="week-group">
+          <h3>Week of Sep 4</h3>
+          <div class="slot-grid">
+            <label class="slot"><input type="checkbox" data-draft="Fri 9/4 Day"><span>Fri 9/4 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Fri 9/4 Night"><span>Fri 9/4 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 9/5 Day"><span>Sat 9/5 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sat 9/5 Night"><span>Sat 9/5 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 9/6 Day"><span>Sun 9/6 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Sun 9/6 Night"><span>Sun 9/6 &mdash; Night</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Mon 9/7 Day"><span>Mon 9/7 &mdash; Day</span></label>
+            <label class="slot"><input type="checkbox" data-draft="Mon 9/7 Night"><span>Mon 9/7 &mdash; Night</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Step 3</span>
+        <h2>Rule change votes</h2>
+        <p class="sub">Vote yes or no on each proposed change for next season.</p>
+
+        <div id="rules-list"></div>
+      </div>
+
+      <div class="submit-row">
+        <button class="submit-btn" id="submit-btn">Submit my vote</button>
+        <p class="error-msg" id="error-msg"></p>
+      </div>
+    </div>
+
+    <div class="success-screen" id="success-screen">
+      <div class="ball">🏈</div>
+      <h2>Vote submitted</h2>
+      <p>Thanks, your picks are locked in. The commissioner will share results once everyone's voted.</p>
+    </div>
+
+    <button class="results-link" id="open-results-link">Commissioner results login</button>
+  </div>
+
+  <footer>DHFFL &middot; 2026 Season</footer>
+</div>
+
+<div class="results-page" id="results-page">
+  <header>
+    <h1>DHFFL</h1>
+    <p>Commissioner Results</p>
+  </header>
+  <div class="container">
+    <div class="summary-bar">
+      <h2 id="resp-count">0 responses</h2>
+      <div style="display:flex; gap:0.5rem;">
+        <button class="clear-btn" id="back-to-form-btn" style="border-color:var(--line); color:var(--muted);">Back to form</button>
+        <button class="clear-btn" id="clear-results-btn">Clear all data</button>
+      </div>
+    </div>
+
+    <div id="tally-section"></div>
+    <div id="responses-section"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="password-modal">
+  <div class="modal-box">
+    <h3>Commissioner login</h3>
+    <p style="color:var(--muted); font-size:0.85rem; margin:0;">Enter the password to view results.</p>
+    <input type="text" id="password-input" placeholder="Password" style="text-align:center;">
+    <p class="error-msg" id="password-error" style="margin-bottom:0.8rem;">Incorrect password.</p>
+    <div class="modal-actions">
+      <button id="password-cancel">Cancel</button>
+      <button class="confirm" id="password-confirm">Enter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RESULTS_PASSWORD = "DHFFL2026";
+
+const rules = [
+  { id: "platform", text: "Switch to a different platform other than Yahoo?" },
+  { id: "ppr", text: "Switch to 0.75 PPR scoring?" },
+  { id: "td_bonus", text: "Add a bonus for touchdowns over 60 yards? (Requires switching platforms.)" },
+  { id: "flex", text: "Add an extra flex roster spot?" },
+  { id: "keepers", text: "Bring back keepers? You'd be able to keep players from this draft for next season." },
+  { id: "median", text: "Add median scoring &mdash; an additional game each week against the league average score?" },
+  { id: "no_k", text: "Remove the kicker position?" },
+  { id: "no_dst", text: "Remove the team defense/special teams position?" },
+  { id: "continuity", text: "Continuity rule &mdash; any new rule passed stays in place for 3 years before it can be revisited?" }
+];
+
+const rulesList = document.getElementById('rules-list');
+rules.forEach((r, i) => {
+  const div = document.createElement('div');
+  div.className = 'rule-item';
+  div.innerHTML = `
+    <p class="rule-text">${r.text}</p>
+    <div class="yn-toggle" data-rule="${r.id}">
+      <div class="yn-btn yes" data-val="yes">Yes</div>
+      <div class="yn-btn no" data-val="no">No</div>
+    </div>
+  `;
+  rulesList.appendChild(div);
+});
+
+document.querySelectorAll('.slot input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.slot').classList.toggle('checked', cb.checked);
+  });
+});
+
+document.querySelectorAll('.yn-toggle').forEach(toggle => {
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.yn-btn');
+    if (!btn) return;
+    toggle.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    toggle.dataset.selected = btn.dataset.val;
+  });
+});
+
+function showError(msg){
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function clearError(){
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  clearError();
+  const name = document.getElementById('voter-name').value.trim();
+  if (!name) {
+    showError('Please enter your name before submitting.');
+    return;
+  }
+
+  const draftSlots = Array.from(document.querySelectorAll('.slot input[type="checkbox"]:checked')).map(cb => cb.dataset.draft);
+  if (draftSlots.length === 0) {
+    showError('Please select at least one draft date/time you are available.');
+    return;
+  }
+
+  const ruleVotes = {};
+  let allRulesAnswered = true;
+  document.querySelectorAll('.yn-toggle').forEach(toggle => {
+    const id = toggle.dataset.rule;
+    const val = toggle.dataset.selected;
+    if (!val) allRulesAnswered = false;
+    ruleVotes[id] = val || null;
+  });
+  if (!allRulesAnswered) {
+    showError('Please vote yes or no on every rule change.');
+    return;
+  }
+
+  const submission = {
+    name,
+    draftSlots,
+    ruleVotes,
+    submittedAt: new Date().toISOString()
+  };
+
+  const key = 'response:' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
+
+  try {
+    const result = await window.storage.set(key, JSON.stringify(submission), true);
+    if (!result) {
+      showError('Something went wrong submitting your vote. Please try again.');
+      return;
+    }
+    document.getElementById('form-wrap').classList.add('hidden');
+    document.getElementById('success-screen').style.display = 'block';
+  } catch (err) {
+    showError('Something went wrong submitting your vote. Please try again.');
+  }
+});
+
+const ruleLabels = {};
+rules.forEach(r => { ruleLabels[r.id] = r.text.replace(/<[^>]*>/g, ''); });
+
+document.getElementById('open-results-link').addEventListener('click', () => {
+  document.getElementById('password-input').value = '';
+  document.getElementById('password-error').style.display = 'none';
+  document.getElementById('password-modal').classList.add('show');
+});
+
+document.getElementById('password-cancel').addEventListener('click', () => {
+  document.getElementById('password-modal').classList.remove('show');
+});
+
+document.getElementById('password-confirm').addEventListener('click', checkPassword);
+document.getElementById('password-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+function checkPassword(){
+  const val = document.getElementById('password-input').value;
+  if (val === RESULTS_PASSWORD) {
+    document.getElementById('password-modal').classList.remove('show');
+    document.getElementById('form-page').style.display = 'none';
+    document.getElementById('results-page').classList.add('show');
+    loadResults();
+  } else {
+    document.getElementById('password-error').style.display = 'block';
+  }
+}
+
+document.getElementById('back-to-form-btn').addEventListener('click', () => {
+  document.getElementById('results-page').classList.remove('show');
+  document.getElementById('form-page').style.display = 'block';
+});
+
+document.getElementById('clear-results-btn').addEventListener('click', async () => {
+  if (!confirm('This will permanently delete all submitted responses. Continue?')) return;
+  try {
+    const list = await window.storage.list('response:', true);
+    if (list && list.keys) {
+      for (const k of list.keys) {
+        await window.storage.delete(k, true);
+      }
+    }
+    loadResults();
+  } catch (err) {
+    alert('Could not clear results. Please try again.');
+  }
+});
+
+async function loadResults(){
+  const tallySection = document.getElementById('tally-section');
+  const responsesSection = document.getElementById('responses-section');
+  const respCount = document.getElementById('resp-count');
+
+  tallySection.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+  responsesSection.innerHTML = '';
+
+  let keys = [];
+  try {
+    const list = await window.storage.list('response:', true);
+    keys = (list && list.keys) ? list.keys : [];
+  } catch (err) {
+    tallySection.innerHTML = '<p style="text-align:center; color:var(--muted);">No responses yet.</p>';
+    respCount.textContent = '0 responses';
+    return;
+  }
+
+  if (keys.length === 0) {
+    tallySection.innerHTML = '';
+    responsesSection.innerHTML = '<div class="empty-state">No one has voted yet. Share the form link with the league.</div>';
+    respCount.textContent = '0 responses';
+    return;
+  }
+
+  const submissions = [];
+  for (const k of keys) {
+    try {
+      const res = await window.storage.get(k, true);
+      if (res && res.value) {
+        submissions.push(JSON.parse(res.value));
+      }
+    } catch (err) {}
+  }
+
+  submissions.sort((a,b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+
+  respCount.textContent = submissions.length + (submissions.length === 1 ? ' response' : ' responses');
+
+  const draftTally = {};
+  const ruleTally = {};
+  rules.forEach(r => { ruleTally[r.id] = { yes: 0, no: 0 }; });
+
+  submissions.forEach(s => {
+    (s.draftSlots || []).forEach(slot => {
+      draftTally[slot] = (draftTally[slot] || 0) + 1;
+    });
+    Object.entries(s.ruleVotes || {}).forEach(([id, val]) => {
+      if (ruleTally[id] && (val === 'yes' || val === 'no')) {
+        ruleTally[id][val]++;
+      }
+    });
+  });
+
+  const sortedDraftSlots = Object.entries(draftTally).sort((a,b) => b[1]-a[1]);
+
+  let tallyHtml = '<div class="tally-card"><h3 style="margin-top:0;">Draft availability tally</h3>';
+  if (sortedDraftSlots.length === 0) {
+    tallyHtml += '<p style="color:var(--muted); font-size:0.9rem;">No draft slots selected yet.</p>';
+  } else {
+    sortedDraftSlots.forEach(([slot, count]) => {
+      tallyHtml += `<div class="tally-row"><span class="label">${slot}</span><span class="counts">${count} available</span></div>`;
+    });
+  }
+  tallyHtml += '</div>';
+
+  tallyHtml += '<div class="tally-card"><h3 style="margin-top:0;">Rule change tally</h3>';
+  rules.forEach(r => {
+    const t = ruleTally[r.id];
+    tallyHtml += `<div class="tally-row"><span class="label">${ruleLabels[r.id]}</span><span class="counts"><span class="y">${t.yes} yes</span> &middot; <span class="n">${t.no} no</span></span></div>`;
+  });
+  tallyHtml += '</div>';
+
+  tallySection.innerHTML = tallyHtml;
+
+  let respHtml = '<h3>Individual responses</h3>';
+  submissions.forEach(s => {
+    const dateStr = new Date(s.submittedAt).toLocaleString();
+    respHtml += `<div class="resp-card">
+      <h3>${escapeHtml(s.name)}</h3>
+      <p style="color:var(--muted); font-size:0.78rem; margin:0 0 0.7rem;">Submitted ${dateStr}</p>
+      <p style="font-size:0.8rem; font-weight:700; margin:0 0 0.4rem; color:var(--pigskin-dark);">Available drafts</p>
+      <div class="tag-row">
+        ${(s.draftSlots || []).map(d => `<span class="tag">${d}</span>`).join('') || '<span style="color:var(--muted); font-size:0.85rem;">None selected</span>'}
+      </div>
+      <p style="font-size:0.8rem; font-weight:700; margin:0.8rem 0 0.4rem; color:var(--pigskin-dark);">Rule votes</p>
+      <table>
+        ${rules.map(r => {
+          const val = (s.ruleVotes || {})[r.id];
+          const cls = val === 'yes' ? 'yes-val' : 'no-val';
+          return `<tr><td>${ruleLabels[r.id]}</td><td class="${cls}">${val ? val.toUpperCase() : '—'}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>`;
+  });
+  responsesSection.innerHTML = respHtml;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
